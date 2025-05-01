@@ -3,12 +3,15 @@ import { api, Message } from '@rocket.chat/core-services';
 import { isThreadMessage, type AtLeast, type IMessage, type IRoom, type IThreadMessage, type IUser } from '@rocket.chat/core-typings';
 import { Messages, Rooms, Uploads, Users, ReadReceipts, Subscriptions } from '@rocket.chat/models';
 import { Meteor } from 'meteor/meteor';
+import { Logger } from '@rocket.chat/logger';
 
 import { callbacks } from '../../../../lib/callbacks';
 import { canDeleteMessageAsync } from '../../../authorization/server/functions/canDeleteMessage';
 import { FileUpload } from '../../../file-upload/server';
 import { settings } from '../../../settings/server';
 import { notifyOnRoomChangedById, notifyOnMessageChange, notifyOnSubscriptionChangedByRoomIdAndUserIds } from '../lib/notifyListener';
+
+const logger = new Logger('deleteMessage');
 
 export const deleteMessageValidatingPermission = async (message: AtLeast<IMessage, '_id'>, userId: IUser['_id']): Promise<void> => {
 	if (!message?._id) {
@@ -69,13 +72,15 @@ export async function deleteMessage(message: IMessage, user: IUser): Promise<voi
 		}
 	} else {
 		if (!showDeletedStatus) {
-			await Messages.removeById(message._id);
+			let test = await Messages.removeById(message._id);
+			logger.debug(`QUERY DELETE MESSAGE" ${JSON.stringify(test)}`);
+			
 		}
 		await ReadReceipts.removeByMessageId(message._id);
 
 		for await (const file of files) {
 			file?._id && (await FileUpload.getStore('Uploads').deleteById(file._id));
-		}
+		}	
 	}
 	if (showDeletedStatus) {
 		// TODO is there a better way to tell TS "IUser[username]" is not undefined?

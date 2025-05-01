@@ -8,7 +8,9 @@
 		"allowJs": true,
 		"checkJs": false,
 		"jsx": "react-jsx",
-		"noEmit": true,
+		"noEmit": false,
+		"sourceMap": true,
+		"outDir": "./dist",
 
 		/* Strict Type-Checking Options */
 		"strictPropertyInitialization": false,
